@@ -79,6 +79,7 @@ int p6_icmp6_seq( uint16_t seq ){
 	icmp6_hdr.seq = htons( seq );
 	return 0;
 }
+// Copy icmp and data to datagram
 int p6_dg_cp_icmp6(){
 	p6_dg_copy( &(icmp6_hdr), ICMP6_HDRLEN_ECRQT);
 	p6_dg_copy( icmp6_data, icmp6_datalen);

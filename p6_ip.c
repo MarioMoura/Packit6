@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 struct ipv6_hdr ip_hdr; 
+int ipv6_hdrlen = 40; // base length, no extension headers
 
 
 int p6_ip_vs( uint8_t version ){
@@ -26,7 +27,7 @@ int p6_ip_tc( uint8_t trafficclass ){
 	return 0;
 }
 int p6_ip_fl( uint32_t flow_label ){
-	if(flow_label > (1048576)){ // Max value for 20 bits
+	if(flow_label > (BIT20_MAX)){ // Max value for 20 bits
 		fprintf(stderr, "Error: Flow label out of range, setting to 0\n");
 		return 1;
 	}
@@ -63,5 +64,9 @@ int p6_ip_dst( char *string_dst ){
 		fprintf (stderr, "Error while parsing the ip destination address\n" );
 		return EXIT_FAILURE;
 	}
+	return 0;
+}
+int p6_dg_copy_ip(){
+	p6_dg_copy( &(ip_hdr), ipv6_hdrlen);
 	return 0;
 }

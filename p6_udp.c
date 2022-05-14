@@ -8,7 +8,7 @@ struct udphdr udphdr;
 struct udpv6_psdhdr psdhdr_preamble;
 uint8_t *psdhdr;
 void *udpdata;
-int udpdata_len;
+int udpdatalen;
 
 uint16_t checksum (uint16_t *addr, int len) {
   int count = len;
@@ -36,7 +36,7 @@ uint16_t checksum (uint16_t *addr, int len) {
 }
 int p6_udp_data( void *addr, int len){
 	udpdata = addr;
-	udpdata_len = len;
+	udpdatalen = len;
 	return 0;
 }
 int p6_udp_sport( uint16_t sport){
@@ -57,25 +57,25 @@ int p6_udp_checksum( uint16_t cksum){
 }
 void p6_udp_calc_cksum(){
 	p6_udp_checksum( 0 );
-	int psdhdrlen = UDP6_PSDHDRLEN + UDP_HDRLEN + udpdata_len;
+	int psdhdrlen = UDP6_PSDHDRLEN + UDP_HDRLEN + udpdatalen;
 	psdhdr = malloc( psdhdrlen * sizeof( uint8_t));
 
 	memcpy(&(psdhdr_preamble.dst), &(ip_hdr.dst), sizeof( struct in6_addr));
 	memcpy(&(psdhdr_preamble.src), &(ip_hdr.src), sizeof( struct in6_addr));
-	psdhdr_preamble.ulpl = htonl( UDP_HDRLEN + udpdata_len );
+	psdhdr_preamble.ulpl = htonl( UDP_HDRLEN + udpdatalen );
 	psdhdr_preamble.nxthdr = P_UDP;
 
 	memcpy( psdhdr, &psdhdr_preamble, UDP6_PSDHDRLEN);
 	memcpy( psdhdr + UDP6_PSDHDRLEN, &(udphdr), UDP_HDRLEN);
-	memcpy( psdhdr + UDP6_PSDHDRLEN + UDP_HDRLEN, udpdata, udpdata_len);
+	memcpy( psdhdr + UDP6_PSDHDRLEN + UDP_HDRLEN, udpdata, udpdatalen);
 	udphdr.check = checksum((uint16_t *) psdhdr, psdhdrlen);;
 
 	free(psdhdr);
 }
 void p6_dg_cp_udp(){
 	p6_dg_copy(&(udphdr), UDP_HDRLEN);
-	if(udpdata_len){
-		p6_dg_copy( udpdata, udpdata_len);
+	if(udpdatalen){
+		p6_dg_copy( udpdata, udpdatalen);
 	}
 }
 

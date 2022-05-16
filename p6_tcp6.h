@@ -6,6 +6,7 @@
 
 #define TCP_HDRLEN 20
 #define TCP6_PSDHDRLEN 40
+#define MIN_DOFF 5
 
 struct tcpv6_psdhdr{
     struct in6_addr src;
@@ -36,6 +37,27 @@ struct tcp_header{
 	uint16_t urg;
 } __attribute__ ((packed));
 
+struct mss_struct {
+	uint8_t type ;
+	uint8_t size ;
+	uint16_t mss;
+} __attribute__ ((packed));
+struct wsf_struct{
+	uint8_t type;
+	uint8_t size;
+	uint8_t wsf;
+} __attribute__ ((packed));
+struct sap_struct{
+	uint8_t type;
+	uint8_t size;
+} __attribute__ ((packed));
+struct tstmp_struct{
+	uint8_t type;
+	uint8_t size;
+	uint32_t ststmp;
+	uint32_t rtstmp;
+} __attribute__ ((packed));
+
 extern struct tcp_header tcphdr;
 
 void p6_tcp_sport( uint16_t sport );
@@ -58,5 +80,14 @@ void p6_tcp_urg( uint16_t urg );
 void p6_tcp_calc_cksum();
 void p6_tcp_data( void *addr, int len );
 void p6_dg_cp_tcp();
+
+void p6_tcp_calc_doff();
+
+// TCP options
+void p6_tcp_mkops();
+void p6_tcp_mss( uint16_t mss );
+void p6_tcp_wsf( uint8_t wsf);
+void p6_tcp_sap();
+void p6_tcp_tstmp( uint32_t sstmp, uint32_t rstmp);
 
 #endif

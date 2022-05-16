@@ -92,12 +92,11 @@ int main(void){
 	p6_ip_src("::1");
 	p6_ip_dst("::1");
 
-	p6_dg_copy_ip();
 
 	/*TCP Header*/
 	p6_tcp_sport( 3900 );
 	p6_tcp_dport( 3500 );
-	p6_tcp_doff( 5 );
+	/*p6_tcp_doff( 5 );*/
 	p6_tcp_seq( 1 );
 	p6_tcp_ack( 150 );
 	/*p6_tcp_fns( 1 );*/
@@ -111,13 +110,20 @@ int main(void){
 	p6_tcp_fsyn( 1 );
 	p6_tcp_win( 150 );
 	/*p6_tcp_cksum( 0xc9e6 );*/
+	p6_tcp_mss( 35000 );
+	p6_tcp_wsf( 10 );
+	p6_tcp_sap();
+	p6_tcp_tstmp( 1 , 1 );
 
 	p6_tcp_data( data, datalen);
+	p6_tcp_calc_doff();
+	p6_tcp_mkops();
 	p6_tcp_calc_cksum();
+	p6_dg_copy_ip();
 	p6_dg_cp_tcp();
 
 	hexDump( "Data", (void*) datagram,
-			54 + 20
+		98
 			, 16);
 	p6_dg_send( "lo" );
 	p6_dg_free();

@@ -6,6 +6,9 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 
+struct psdhdr_struct psdhdr_preamble;
+uint8_t *psdhdr;
+
 struct ipv6_hdr ip_hdr; 
 int ipv6_hdrlen = 40; // base length, no extension headers
 
@@ -70,3 +73,28 @@ int p6_dg_copy_ip(){
 	p6_dg_copy( &(ip_hdr), ipv6_hdrlen);
 	return 0;
 }
+uint16_t checksum (uint16_t *addr, int len) {
+  int count = len;
+  register uint32_t sum = 0;
+  uint16_t answer = 0;
+  // Sum up 2-byte values until none or only one byte left.
+  while (count > 1) {
+    sum += *(addr++);
+    count -= 2;
+  }
+  // Add left-over byte, if any.
+  if (count > 0) {
+    sum += *(uint8_t *) addr;
+  }
+  // Fold 32-bit sum into 16 bits; we lose information by doing this,
+  // increasing the chances of a collision.
+  // sum = (lower 16 bits) + (upper 16 bits shifted right 16 bits)
+  while (sum >> 16) {
+    sum = (sum & 0xffff) + (sum >> 16);
+  }
+  // Checksum is one's compliment of sum.
+  answer = ~sum;
+
+  return (answer);
+}
+

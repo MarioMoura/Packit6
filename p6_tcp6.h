@@ -8,14 +8,6 @@
 #define TCP6_PSDHDRLEN 40
 #define MIN_DOFF 5
 
-struct tcpv6_psdhdr{
-    struct in6_addr src;
-    struct in6_addr dst;
-	uint32_t ulpl;
-	uint8_t zero[3];
-	uint8_t nxthdr;
-} __attribute__ ((packed));
-
 struct tcp_header{
 	uint16_t sport;
 	uint16_t dport;

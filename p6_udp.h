@@ -7,14 +7,6 @@
 
 #define UDP_HDRLEN  8         // UDP header length, excludes data
 #define UDP6_PSDHDRLEN 40
-	
-struct udpv6_psdhdr{
-    struct in6_addr src;
-    struct in6_addr dst;
-	uint32_t ulpl;
-	uint8_t zero[3];
-	uint8_t nxthdr;
-} __attribute__ ((packed));
 
 extern struct udphdr udphdr;
 

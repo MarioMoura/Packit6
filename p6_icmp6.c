@@ -3,43 +3,16 @@
 #include <string.h>
 
 struct icmpv6_header icmp6_hdr;
-struct icmpv6_psdhdr psdhdr_preamble;
-uint8_t *psdhdr;
 
 void *icmp6_data;
 int icmp6_datalen;
 
-uint16_t checksum (uint16_t *addr, int len) {
-  int count = len;
-  register uint32_t sum = 0;
-  uint16_t answer = 0;
-  // Sum up 2-byte values until none or only one byte left.
-  while (count > 1) {
-    sum += *(addr++);
-    count -= 2;
-  }
-  // Add left-over byte, if any.
-  if (count > 0) {
-    sum += *(uint8_t *) addr;
-  }
-  // Fold 32-bit sum into 16 bits; we lose information by doing this,
-  // increasing the chances of a collision.
-  // sum = (lower 16 bits) + (upper 16 bits shifted right 16 bits)
-  while (sum >> 16) {
-    sum = (sum & 0xffff) + (sum >> 16);
-  }
-  // Checksum is one's compliment of sum.
-  answer = ~sum;
-
-  return (answer);
-}
 
 int p6_icmp6_data( void *addr, int len ){
 	icmp6_data = addr;
 	icmp6_datalen = len;
 	return 0;
 }
-
 int p6_icmp6_type( uint8_t type){
 	icmp6_hdr.type = type;
 	return 0;
@@ -52,7 +25,6 @@ int p6_icmp6_checksum( uint16_t cksum ){
 	icmp6_hdr.chksum = htons( cksum );
 	return 0;
 }
-
 int p6_icmp6_calc_cksum(){
 	p6_icmp6_checksum( 0 );
 	int psdhdrlen = ICMP6_PSDHDRLEN + ICMP6_HDRLEN_ECRQT + icmp6_datalen;

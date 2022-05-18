@@ -46,6 +46,14 @@
 #define P_DSTOPTS		IPPROTO_DSTOPTS /* IPv6 destination options.  */
 #define P_MH		IPPROTO_MH /* IPv6 mobility header.  */
 
+struct psdhdr_struct {
+    struct in6_addr src;
+    struct in6_addr dst;
+	uint32_t ulpl;
+	uint8_t zero[3];
+	uint8_t nxthdr;
+} __attribute__ ((packed));
+
 struct ipv6_hdr {
 	/*unsigned int*/
 		/*version : 4,*/
@@ -69,6 +77,9 @@ struct ipv6_hdr {
 extern struct ipv6_hdr ip_hdr; 
 extern int ipv6_hdrlen;
 
+extern struct psdhdr_struct psdhdr_preamble;
+extern uint8_t *psdhdr;
+
 int p6_ip_vs( uint8_t version );
 int p6_ip_tc( uint8_t trafficclass );
 int p6_ip_fl( uint32_t flow_label );
@@ -78,5 +89,6 @@ void p6_ip_hl( uint8_t hop_limit );
 int p6_ip_src( char *string_src );
 int p6_ip_dst( char *string_dst );
 int p6_dg_copy_ip();
+uint16_t checksum (uint16_t *addr, int len);
 
 #endif

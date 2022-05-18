@@ -13,14 +13,6 @@ struct icmpv6_header {
   uint16_t id, seq;
 } __attribute__ ((packed));
 
-struct icmpv6_psdhdr{
-    struct in6_addr src;
-    struct in6_addr dst;
-	uint32_t ulpl;
-	uint8_t zero[3];
-	uint8_t nxthdr;
-} __attribute__ ((packed));
-
 int p6_icmp6_data( void *addr, int len );
 int p6_icmp6_type( uint8_t type);
 int p6_icmp6_code( uint8_t code);

@@ -72,6 +72,7 @@ void p6_tcp_urg( uint16_t urg );
 void p6_tcp_calc_cksum();
 void p6_tcp_data( void *addr, int len );
 void p6_dg_cp_tcp();
+void p6_tcp_flags( char *str );
 
 void p6_tcp_calc_doff();
 
@@ -81,5 +82,6 @@ void p6_tcp_mss( uint16_t mss );
 void p6_tcp_wsf( uint8_t wsf);
 void p6_tcp_sap();
 void p6_tcp_tstmp( uint32_t sstmp, uint32_t rstmp);
+void p6_tcp_timestamp( char *str);
 
 #endif

@@ -52,8 +52,8 @@ int p6_icmp6_seq( uint16_t seq ){
 	return 0;
 }
 // Copy icmp and data to datagram
-int p6_dg_cp_icmp6(){
+void p6_dg_cp_icmp6(){
 	p6_dg_copy( &(icmp6_hdr), ICMP6_HDRLEN_ECRQT);
-	p6_dg_copy( icmp6_data, icmp6_datalen);
-	return 0;
+	if(icmp6_datalen)
+		p6_dg_copy( icmp6_data, icmp6_datalen);
 }

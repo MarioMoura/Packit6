@@ -39,7 +39,6 @@ void p6_tcp_doff( uint8_t doff ){
 }
 void p6_tcp_calc_doff(){
 	p6_ip_pl( TCP_HDRLEN + ( tcpoptions_words * 4 ) + tcpdatalen );
-	printf("pl = %d\n", TCP_HDRLEN + ( tcpoptions_words * 4 ) + tcpdatalen );
 	p6_tcp_doff( MIN_DOFF + tcpoptions_words);
 }
 void p6_tcp_fns( char flag ){
@@ -103,7 +102,6 @@ void p6_tcp_cksum( uint16_t cksum ){
 	tcphdr.cksum = htons( cksum );
 }
 void p6_tcp_calc_cksum(){
-	printf("tcpoptions_words = %d\n", tcpoptions_words);
 	uint8_t *psdhdr_ptr;
 	p6_tcp_cksum( 0 );
 	psdhdrlen = TCP_HDRLEN + TCP6_PSDHDRLEN + (tcpoptions_words * sizeof(uint32_t)) + tcpdatalen;
@@ -220,5 +218,30 @@ void p6_tcp_tstmp( uint32_t sstmp, uint32_t rstmp){
 	if( tcp_options_len % 4)
 		tcpoptions_words++;
 }
+void p6_tcp_flags( char *str ){
+	if(strchr(str,'S') != NULL)
+		p6_tcp_fsyn(1);
+	if(strchr(str,'F') != NULL)
+		p6_tcp_ffin(1);
+	if(strchr(str,'A') != NULL)
+		p6_tcp_fack(1);
+	if(strchr(str,'P') != NULL)
+		p6_tcp_fpsh(1);
+	if(strchr(str,'U') != NULL)
+		p6_tcp_furg(1);
+	if(strchr(str,'R') != NULL)
+		p6_tcp_frst(1);
+	if(strchr(str,'N') != NULL)
+		p6_tcp_fns(1);
+}
+void p6_tcp_timestamp( char *str){
+	unsigned int v1, v2 = 0;
+	int ret = sscanf(str,"%u,%u", &v1, &v2);
+	printf("ret = %d\n", ret);
+	if(ret == 2)
+		p6_tcp_tstmp( v1, v2 );
+	else
+		fprintf(stderr, "Warning: Error in timestamp syntax\n");
 	
+}
 

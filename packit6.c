@@ -49,6 +49,16 @@
 #define IC_ID 1011
 #define IC_SQ 1012
 
+#define UDP_L 1013
+#define UDP_CKS 1014
+
+#define TCP_CKS 1015
+#define TCP_DOFF 1016
+#define TCP_MSS 1017
+#define TCP_WSF 1018
+#define TCP_SAP 1019
+#define TCP_STMP 1020
+
 // Usage
 char *usage= "Usage: [-m mode] [-t protocol] [-ab] [-c cvalue]\n";
 
@@ -56,6 +66,7 @@ char *usage= "Usage: [-m mode] [-t protocol] [-ab] [-c cvalue]\n";
 char *protocol = NULL;
 char *payload = NULL;
 int payload_len = 0;
+void (*cp_fun)(void);
 
 // Ethernet
 char *ether_src = NULL;
@@ -69,7 +80,7 @@ char ip_v = 6;
 uint8_t ip_tc = 0;
 uint32_t ip_fl = 0;
 uint8_t ip_pl = 0;
-uint8_t ip_nh = 0;
+uint8_t ip_nh = 0; char fip_nh = 0;
 uint8_t ip_hl = 64;
 
 // ICMPv6
@@ -79,10 +90,34 @@ uint16_t ic_cks = 0;
 uint16_t ic_id = 1;
 uint16_t ic_sq = 1;
 
+// UDP && TCP
+uint16_t sport;
+uint16_t dport;
+
+// UDP
+uint16_t udp_l = 0; char fudp_l = 0;
+uint16_t udp_cks = 0; char fudp_cks = 0;
+
+// TCP
+char    *tcp_flags;
+uint8_t  tcp_doff ; char ftcp_doff = 0;
+uint32_t tcp_sq   ;
+uint32_t tcp_ack  ;
+uint16_t tcp_win  ;
+uint16_t tcp_cks  ; char ftcp_cks  = 0;
+uint16_t tcp_urg  ;
+
+// TCP Options
+uint16_t tcp_mss ; char ftcp_mss  = 0;
+uint16_t tcp_wsf ; char ftcp_wsf  = 0;
+                   char ftcp_sap  = 0;
+char    *tcp_stmp; char ftcp_stmp = 0;
+
+
 // Long options
 static struct option long_options[] =
 {
-    {"payload", required_argument, NULL, PAYLOAD},
+	{"payload", required_argument, NULL, PAYLOAD},
     {"eT", required_argument, NULL, ETHERTYPE},
     {"ipV", required_argument, NULL, IP_VERSION},
     {"ipTC", required_argument, NULL, IP_TC},
@@ -95,6 +130,14 @@ static struct option long_options[] =
     {"icCKS", required_argument, NULL, IC_CKS},
     {"icID", required_argument, NULL, IC_ID},
     {"icSQ", required_argument, NULL, IC_SQ},
+    {"udpL", required_argument, NULL, UDP_L},
+    {"udpCKS", required_argument, NULL, UDP_CKS},
+    {"tcpCKS", required_argument, NULL, TCP_CKS},
+    {"tcpOFF", required_argument, NULL, TCP_DOFF},
+    {"tcpMSS", required_argument, NULL, TCP_MSS},
+    {"tcpWSF", required_argument, NULL, TCP_WSF},
+    {"tcpSAP", no_argument, NULL, TCP_SAP},
+    {"tcpSTMP", required_argument, NULL, TCP_STMP},
     {NULL, 0, NULL, 0}
 };
 
@@ -107,35 +150,52 @@ int main( int argc, char **argv){
 	}
 
 	// Parsing of command line arguments
-	while ((opt = getopt_long(argc, argv, "e:E:t:s:d:p:K:C:N:Q:",long_options,NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "he:E:t:s:d:p:K:C:N:Q:S:D:fF:q:a:W:u:",long_options,NULL)) != -1) {
         switch (opt) {
-        case 't': protocol = optarg; break; // Protocol
-        case 'e': ether_src = optarg; break; // Ether Src
-        case 'E': ether_dst = optarg; break; // Ether Dst
-        case ETHERTYPE : ether_type = p6_ether_typestr(optarg); break;
-        case IP_VERSION : ip_v = atoi(optarg) ; break;
-        case IP_TC : ip_tc = atoi(optarg) ; break;
-        case IP_FL : ip_fl = atoi(optarg) ; break;
-        case IP_PL : ip_pl = atoi(optarg) ; break;
-        case IP_NH : ip_nh = atoi(optarg) ; break;
-        case IP_HL : ip_hl = atoi(optarg) ; break;
-		case 's': ip_src = optarg; break; // IP Src
-		case 'd': ip_dst = optarg; break; // IP Dst
-		case IC_T: ic_t = atoi(optarg); break;
-		case 'K': ic_t = atoi(optarg); break;
-		case IC_C: ic_c = atoi(optarg); break;
-		case 'C': ic_c = atoi(optarg); break;
-		case IC_CKS: ic_cks = atoi(optarg); break;
-		case IC_ID: ic_id = atoi(optarg); break;
-		case 'N': ic_id = atoi(optarg); break;
-		case IC_SQ: ic_sq = atoi(optarg); break;
-		case 'Q': ic_sq = atoi(optarg); break;
-        case PAYLOAD: payload = optarg; break;
-        case 'p': payload = optarg; break;
-        default:
-            fprintf(stderr, usage , argv[0]);
-            exit(EXIT_FAILURE);
-        }
+			case 'h': printf(usage); exit(0); break;
+			case 't': protocol = optarg; break; // Protocol
+			case 'e': ether_src = optarg; break; // Ether Src
+			case 'E': ether_dst = optarg; break; // Ether Dst
+			case ETHERTYPE : ether_type = p6_ether_typestr(optarg); break;
+			case IP_VERSION : ip_v = atoi(optarg) ; break;
+			case IP_TC : ip_tc = atoi(optarg) ; break;
+			case IP_FL : ip_fl = atoi(optarg) ; break;
+			case IP_PL : ip_pl = atoi(optarg) ; break;
+			case IP_NH : ip_nh = atoi(optarg) ; fip_nh=1; break;
+			case IP_HL : ip_hl = atoi(optarg) ; break;
+			case 's': ip_src = optarg; break; // IP Src
+			case 'd': ip_dst = optarg; break; // IP Dst
+			case IC_T: ic_t = atoi(optarg); break;
+			case 'K': ic_t = atoi(optarg); break;
+			case IC_C: ic_c = atoi(optarg); break;
+			case 'C': ic_c = atoi(optarg); break;
+			case IC_CKS: ic_cks = atoi(optarg); break;
+			case IC_ID: ic_id = atoi(optarg); break;
+			case 'N': ic_id = atoi(optarg); break;
+			case IC_SQ: ic_sq = atoi(optarg); break;
+			case 'Q': ic_sq = atoi(optarg); break;
+			case PAYLOAD: payload = optarg; break;
+			case 'p': payload = optarg; break;
+			case 'S': sport = atoi(optarg); break;
+			case 'D': dport = atoi(optarg); break;
+			case UDP_L: udp_l = atoi(optarg); fudp_l=1; break;
+			case UDP_CKS: udp_cks = atoi(optarg); fudp_cks=1; break;
+			case 'q': tcp_sq = atoi(optarg); break;
+			case 'a': tcp_ack = atoi(optarg); break;
+			case 'W': tcp_win = atoi(optarg); break;
+			case 'u': tcp_urg = atoi(optarg); break;
+			case TCP_DOFF: tcp_doff = atoi(optarg); ftcp_doff = 1; break;
+			case TCP_CKS: tcp_cks = atoi(optarg); ftcp_cks = 1; break;
+			case 'F': tcp_flags = optarg; break;
+			case 'f': ; break;
+			case TCP_MSS: tcp_mss = atoi(optarg); ftcp_mss = 1; break;
+			case TCP_WSF: tcp_wsf = atoi(optarg); ftcp_wsf = 1; break;
+			case TCP_SAP: ftcp_sap = 1; break;
+			case TCP_STMP: tcp_stmp = optarg; ftcp_stmp = 1; break;
+			default:
+						   fprintf(stderr, usage , argv[0]);
+						   exit(EXIT_FAILURE);
+		}
     }
 	if(!protocol){ // Default Protocol
 		protocol = "icmp";
@@ -167,7 +227,7 @@ int main( int argc, char **argv){
 	p6_ip_tc(ip_tc);
 	p6_ip_fl(ip_fl);
 
-	if(ip_nh)
+	if(fip_nh)
 		p6_ip_nh(ip_nh);
 	else
 		if(!strcasecmp(protocol,"icmp"))
@@ -207,22 +267,65 @@ int main( int argc, char **argv){
 			p6_icmp6_checksum(0);
 			p6_icmp6_calc_cksum();
 		}
+		cp_fun = &p6_dg_cp_icmp6;
+	}else if(!strcasecmp(protocol,"udp")){
+		// Set IP payload length
+		p6_ip_pl( UDP_HDRLEN + payload_len );
+		if(payload)
+			p6_udp_data( payload , payload_len );
+
+		p6_udp_sport(sport);
+		p6_udp_dport(dport);
+		if(fudp_l)
+			p6_udp_len(udp_l); 
+		else
+			p6_udp_len( UDP_HDRLEN + payload_len); 
+
+		if(fudp_cks)
+			p6_udp_checksum( udp_cks);
+		else
+			p6_udp_calc_cksum();
+
+		cp_fun = &p6_dg_cp_udp;
 	}else if(!strcasecmp(protocol,"tcp")){
 
-	}else if(!strcasecmp(protocol,"udp")){
+		if(payload)
+			p6_tcp_data( payload, payload_len);
+		p6_tcp_sport(sport);
+		p6_tcp_dport(dport);
+		p6_tcp_seq(tcp_sq);
+		p6_tcp_ack(tcp_ack);
+		p6_tcp_win(tcp_win);
+		p6_tcp_urg(tcp_urg);
+		if(tcp_flags)
+			p6_tcp_flags(tcp_flags);
+		if(ftcp_mss)
+			p6_tcp_mss(tcp_mss);
+		if(ftcp_wsf)
+			p6_tcp_wsf(tcp_wsf);
+		if(ftcp_sap)
+			p6_tcp_sap();
+		if(ftcp_stmp)
+			p6_tcp_timestamp(tcp_stmp);
 
+		p6_tcp_calc_doff();
+		if(ftcp_doff)
+			p6_tcp_doff(tcp_doff);
+
+		p6_tcp_mkops();
+		if(ftcp_cks)
+			p6_tcp_cksum(tcp_cks);
+		else
+			p6_tcp_calc_cksum();
+
+		cp_fun = &p6_dg_cp_tcp;
 	}
 
 	p6_dg_copy_ether();
 	if(ip_pl)
 		p6_ip_pl(ip_pl);
 	p6_dg_copy_ip();
-	if(!strcasecmp(protocol,"icmp"))
-		p6_dg_cp_icmp6();
-	else if(!strcasecmp(protocol,"tcp"))
-		p6_dg_cp_tcp();
-	else if(!strcasecmp(protocol,"udp"))
-		p6_dg_cp_udp();
+	(*cp_fun)();
 	hexDump( "Datagram", datagram, datagram_len, 16);
 	p6_dg_send( "lo" );
 	p6_dg_free();

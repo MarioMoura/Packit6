@@ -34,6 +34,8 @@
 #define UDP 2
 #define TCP 3
 
+#define HELP 998
+#define DUMP 999
 #define PAYLOAD 1000
 #define ETHERTYPE 1001
 #define IP_VERSION 1002
@@ -60,9 +62,61 @@
 #define TCP_STMP 1020
 
 // Usage
-char *usage= "Usage: [-m mode] [-t protocol] [-ab] [-c cvalue]\n";
+char *usage= "Usage:\n"
+             "packit [-t protocol] [options]\n\n"
+			 "Options:\n"
+			 "        -t [icmp|upc|tcp]            Set protocol\n"
+			 "        --help\n"
+			 "        --dump\n"
+			 "        -p, --payload <payload>      Set the payload\n"
+			 "\n"
+			 "        ETHERNET\n"
+			 "            -e <source_mac>          Ethernet Source address\n"
+			 "            -E <destination_mac>     Ethernet Destination address\n"
+			 "                --eT <ethernet_type> Ethernet Protocol type\n"
+			 "\n"
+			 "        IP\n"
+			 "            -s <source_address>      IP Source address\n"
+			 "            -d <destination_address  IP Destination address\n"
+			 "            -n, --ipFL <label>       IP FlowLabel\n"
+			 "                --ipV <version>      IP version\n"
+			 "                --ipTC <tc>          IP Traffic class\n"
+			 "                --ipPL <pl>          IP Payload length\n"
+			 "                --ipNH <nh>          IP Next Header\n"
+			 "                --ipHL <hl>          IP Hop limit (TTL)\n"
+			 "\n"
+			 "        ICMPv6\n"
+			 "            -K, --icT <type>         ICMP type\n"
+			 "            -C, --icC <code>         ICMP code\n"
+			 "            -N, --icID <id>          ICMP id\n"
+			 "            -Q, --icSQ <sq>          ICMP sequence number\n"
+			 "                --icCKS <checksum>   ICMP Checksum\n"
+			 "\n"
+			 "        UDP\n"
+			 "            -S <port>                UDP Source port\n"
+			 "            -D <port>                UDP Destination port\n"
+			 "                --udpL <len>         UDP length\n"
+			 "                --udpCKS <checksum>  UDP Checksum\n"
+			 "\n"
+			 "        TCP\n"
+			 "            -S <port>                TCP Source port\n"
+			 "            -D <port>                TCP Destination port\n"
+			 "            -F [SFAPURN]             TCP Flags\n"
+			 "            -q <sq_no>               TCP Sequence number\n"
+			 "            -a <ack_no>              TCP Acknowledgment number\n"
+			 "            -W <winz_no>             TCP Window size\n"
+			 "            -u <urg_ptr>             TCP Urgent pointer\n"
+			 "                --tcpCKS <checksum>  TCP Checksum\n"
+			 "                --tcpOFF <doff>      TCP Data offset\n"
+			 "                --tcpMSS <mss>       TCP Maximum segment size\n"
+			 "                --tcpWSF <wsf>       TCP Window scaling\n"
+			 "                --tcpSAP             TCP SAP\n"
+			 "                --tcpSTMP <no,no>    TCP Timestamp\n"
+			 "\n"
+;
 
-// Options variables
+char fdump = 0;
+
 char *protocol = NULL;
 char *payload = NULL;
 int payload_len = 0;
@@ -117,6 +171,8 @@ char    *tcp_stmp; char ftcp_stmp = 0;
 // Long options
 static struct option long_options[] =
 {
+	{"dump", no_argument, NULL, DUMP},
+	{"help", no_argument, NULL, HELP},
 	{"payload", required_argument, NULL, PAYLOAD},
     {"eT", required_argument, NULL, ETHERTYPE},
     {"ipV", required_argument, NULL, IP_VERSION},
@@ -150,9 +206,10 @@ int main( int argc, char **argv){
 	}
 
 	// Parsing of command line arguments
-	while ((opt = getopt_long(argc, argv, "he:E:t:s:d:p:K:C:N:Q:S:D:fF:q:a:W:u:",long_options,NULL)) != -1) {
+	while ((opt = getopt_long(argc, argv, "e:E:t:s:d:n:p:K:C:N:Q:S:D:fF:q:a:W:u:",long_options,NULL)) != -1) {
         switch (opt) {
-			case 'h': printf(usage); exit(0); break;
+			case HELP: printf(usage); exit(0); break;
+			case DUMP: fdump = 1; break;
 			case 't': protocol = optarg; break; // Protocol
 			case 'e': ether_src = optarg; break; // Ether Src
 			case 'E': ether_dst = optarg; break; // Ether Dst
@@ -160,6 +217,7 @@ int main( int argc, char **argv){
 			case IP_VERSION : ip_v = atoi(optarg) ; break;
 			case IP_TC : ip_tc = atoi(optarg) ; break;
 			case IP_FL : ip_fl = atoi(optarg) ; break;
+			case 'n': ip_fl = atoi(optarg) ; break;
 			case IP_PL : ip_pl = atoi(optarg) ; break;
 			case IP_NH : ip_nh = atoi(optarg) ; fip_nh=1; break;
 			case IP_HL : ip_hl = atoi(optarg) ; break;

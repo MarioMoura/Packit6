@@ -37,7 +37,8 @@ int p6_ether_set_src( char *string){
 				&bytes[3], &bytes[4], &bytes[5] ) ) {
 		for( i = 0; i < 6; ++i )
 			eth_hdr.ether_shost[i] = (uint8_t) bytes[i];
-	}
+	}else
+		fprintf(stderr, "Warning: Source MAC address syntax error\n");
 
 	return 0;
 }
@@ -49,7 +50,8 @@ int p6_ether_set_dst( char *string){
 				&bytes[3], &bytes[4], &bytes[5] ) ) {
 		for( i = 0; i < 6; ++i )
 			eth_hdr.ether_dhost[i] = (uint8_t) bytes[i];
-	}
+	}else
+		fprintf(stderr, "Warning: Destination MAC address syntax error\n");
 
 	return 0;
 }
@@ -96,4 +98,18 @@ int p6_dg_send( char *interface){
 int p6_dg_free(){
 	free(datagram);
 	return 0;
+}
+uint16_t p6_ether_typestr( char *str ){
+	uint32_t res = 0;
+	if(sscanf(str, "%x", &res))
+		return res;
+	if(!strcasecmp(str,"ipv6"))
+		return ETHERTYPE_IPV6;
+	if(!strcasecmp(str,"ipv4"))
+		return ETHERTYPE_IP;
+	if(!strcasecmp(str,"lo"))
+		return ETHERTYPE_LOOPBACK;
+	if(!strcasecmp(str,"arp"))
+		return ETHERTYPE_ARP;
+	return res;
 }

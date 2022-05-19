@@ -7,6 +7,7 @@
 #include <net/ethernet.h>
 
 extern uint8_t *datagram;
+extern uint32_t datagram_len;
 extern struct ether_header eth_hdr;
 
 int p6_dg_init();
@@ -17,5 +18,6 @@ int p6_dg_copy_ether();
 int p6_dg_copy( void *addr, int len );
 int p6_dg_send( char *iface);
 int p6_dg_free();
+uint16_t p6_ether_typestr( char *str );
 
 #endif

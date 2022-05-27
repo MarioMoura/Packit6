@@ -44,6 +44,7 @@
 #define IP_PL 1005
 #define IP_NH 1006
 #define IP_HL 1007
+#define IP_HBH 1021
 
 #define IC_T 1008
 #define IC_C 1009
@@ -181,6 +182,7 @@ static struct option long_options[] =
     {"ipPL", required_argument, NULL, IP_PL},
     {"ipNH", required_argument, NULL, IP_NH},
     {"ipHL", required_argument, NULL, IP_HL},
+    {"ipHBH", required_argument, NULL, IP_HBH},
     {"icT", required_argument, NULL, IC_T},
     {"icC", required_argument, NULL, IC_C},
     {"icCKS", required_argument, NULL, IC_CKS},
@@ -208,7 +210,7 @@ int main( int argc, char **argv){
 	// Parsing of command line arguments
 	while ((opt = getopt_long(argc, argv, "e:E:t:s:d:n:p:K:C:N:Q:S:D:fF:q:a:W:u:",long_options,NULL)) != -1) {
         switch (opt) {
-			case HELP: printf(usage); exit(0); break;
+			case HELP: puts(usage); exit(0); break;
 			case DUMP: fdump = 1; break;
 			case 't': protocol = optarg; break; // Protocol
 			case 'e': ether_src = optarg; break; // Ether Src
@@ -223,6 +225,7 @@ int main( int argc, char **argv){
 			case IP_HL : ip_hl = atoi(optarg) ; break;
 			case 's': ip_src = optarg; break; // IP Src
 			case 'd': ip_dst = optarg; break; // IP Dst
+			case IP_HBH: p6_ip_hph_add(optarg); break;
 			case IC_T: ic_t = atoi(optarg); break;
 			case 'K': ic_t = atoi(optarg); break;
 			case IC_C: ic_c = atoi(optarg); break;
@@ -384,8 +387,10 @@ int main( int argc, char **argv){
 		p6_ip_pl(ip_pl);
 	p6_dg_copy_ip();
 	(*cp_fun)();
-	hexDump( "Datagram", datagram, datagram_len, 16);
-	p6_dg_send( "lo" );
+	if(fdump)
+		hexDump( "Datagram", datagram, datagram_len, 16);
+	else
+		p6_dg_send( "lo" );
 	p6_dg_free();
 	return 0;
 }

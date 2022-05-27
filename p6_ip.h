@@ -91,4 +91,8 @@ int p6_ip_dst( char *string_dst );
 int p6_dg_copy_ip();
 uint16_t checksum (uint16_t *addr, int len);
 
+void p6_ip_hph_add(char *str);
+void p6_ip_hph(char *str);
+void p6_mk_ext();
+
 #endif

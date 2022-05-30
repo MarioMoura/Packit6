@@ -55,14 +55,6 @@ struct psdhdr_struct {
 } __attribute__ ((packed));
 
 struct ipv6_hdr {
-	/*unsigned int*/
-		/*version : 4,*/
-		/*traffic_class : 8,*/
-		/*flow_label : 20;*/
-	/*uint8_t l1;*/
-	/*uint8_t l2;*/
-	/*uint8_t l3;*/
-	/*uint8_t l4;*/
 	union {
 		uint8_t version;
 		uint32_t line;
@@ -75,7 +67,7 @@ struct ipv6_hdr {
 } __attribute__ ((packed));
 
 extern struct ipv6_hdr ip_hdr; 
-extern int ipv6_hdrlen;
+extern uint16_t ipv6_pl;
 
 extern struct psdhdr_struct psdhdr_preamble;
 extern uint8_t *psdhdr;
@@ -92,7 +84,8 @@ int p6_dg_copy_ip();
 uint16_t checksum (uint16_t *addr, int len);
 
 void p6_ip_hph_add(char *str);
-void p6_ip_hph(char *str);
-void p6_mk_ext();
+
+void p6_ip_add_len(uint16_t len);
+void p6_ip_autolen();
 
 #endif

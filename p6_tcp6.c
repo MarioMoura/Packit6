@@ -38,7 +38,7 @@ void p6_tcp_doff( uint8_t doff ){
 	tcphdr.doff = ( doff << 4 );
 }
 void p6_tcp_calc_doff(){
-	p6_ip_pl( TCP_HDRLEN + ( tcpoptions_words * 4 ) + tcpdatalen );
+	p6_ip_add_len( TCP_HDRLEN + ( tcpoptions_words * 4 ) + tcpdatalen );
 	p6_tcp_doff( MIN_DOFF + tcpoptions_words);
 }
 void p6_tcp_fns( char flag ){

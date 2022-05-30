@@ -12,14 +12,10 @@ struct psdhdr_struct psdhdr_preamble;
 uint8_t *psdhdr;
 
 struct ipv6_hdr ip_hdr; 
-int ipv6_hdrlen = 40; // base length, no extension headers
+uint16_t ipv6_pl = 0;
 
-uint8_t *ext_hdr;
+uint8_t *ext_hdr = NULL;
 uint32_t ext_len = 0;
-
-uint8_t *hbh_hdr = NULL;
-uint32_t hbh_len = 2;
-char hbh_set = 0;
 
 
 int p6_ip_vs( uint8_t version ){
@@ -79,7 +75,11 @@ int p6_ip_dst( char *string_dst ){
 	return 0;
 }
 int p6_dg_copy_ip(){
-	p6_dg_copy( &(ip_hdr), ipv6_hdrlen);
+	p6_dg_copy( &(ip_hdr), IPV6_HDRLEN);
+	if(ext_hdr){
+		p6_dg_copy( ext_hdr, ext_len);
+		free(ext_hdr);
+	}
 	return 0;
 }
 uint16_t checksum (uint16_t *addr, int len) {
@@ -106,8 +106,17 @@ uint16_t checksum (uint16_t *addr, int len) {
 
   return (answer);
 }
+void p6_cp_ext( void *addr, int len){
+	ext_hdr = realloc( ext_hdr, ext_len + len);
+	memcpy(ext_hdr + ext_len, addr, len);
+	ext_len += len;
+	hexDump( "Ext Header", ext_hdr, ext_len, 16);
+}
 int hexstr2intarr(char *str, int len, uint8_t *mem){
 	memset( mem , 0, len );
+	if(str == NULL){
+		return 0;
+	}
 	int byte_len = 0;
 	int str_len = strlen(str);
 	if(str_len < 3)
@@ -124,21 +133,37 @@ int hexstr2intarr(char *str, int len, uint8_t *mem){
 	return 0;
 }
 void p6_ip_hph_add(char *str){
-	hbh_set = 1;
+	uint8_t *hbh_hdr = NULL;
+	uint32_t hbh_len = 2;
+
 	char *delim = ",";
 	char *token = strtok(str,delim);
+
+	uint8_t nh;
+	uint8_t hlen;
+	char lenset = 0;
 
 	int byte_rest = 0;
 
 	uint8_t t,l;
-	char v_value[40];
 	uint8_t *v;
+	char *v_value;
+	hbh_hdr	= malloc( hbh_len * sizeof(uint8_t));
+	if( sscanf(token,"%hhd %hhd", &nh, &hlen) > 1){
+		hbh_hdr[1] = hlen;
+		lenset = 1;
+	}
+	hbh_hdr[0] = nh;
+
+	token = strtok(NULL,delim);
 	while( token ){
-		sscanf( token,"%x:%x:%s",&t,&l,v_value); // Scan token values
+		printf(" = %d\n",
+		sscanf( token,"%hhd:%hhd:%ms",&t,&l,&v_value) // Scan token values
+		);
 		hbh_hdr = realloc( hbh_hdr, hbh_len + l + 2); // prepare header mem
 		v = malloc( l * sizeof(uint8_t));
 		hexstr2intarr( v_value, l, v);
-		hexDump( "mem", v, l , 16 );
+		free(v_value);
 		memcpy(hbh_hdr + hbh_len, &t, sizeof(uint8_t));
 		memcpy(hbh_hdr + hbh_len + 1, &l, sizeof(uint8_t));
 		memcpy(hbh_hdr + hbh_len + 2, v, l * sizeof(uint8_t));
@@ -146,29 +171,27 @@ void p6_ip_hph_add(char *str){
 		token = strtok(NULL,delim);
 		hbh_len += l + 2;
 	}
-	printf("hbh_len = %d\n", hbh_len);
-	if(hbh_len < 8){ // set padding
-		memset(hbh_hdr + 1, 0, 1); // set HBH len to 0
-		byte_rest = 8 - hbh_len; 
-		printf("byte_rest = %d\n", byte_rest);
-		hbh_hdr = realloc( hbh_hdr, 8); // prepare header mem
-		if( byte_rest > 1 ){ // set padN
-			puts("eae");
-			memset(hbh_hdr + hbh_len, 1, 1);
-			memset(hbh_hdr + hbh_len + 1, byte_rest - 2, 1);
-		}
-		hbh_len = 8;
+	if(hbh_len % 8)
+		byte_rest = 8 - (hbh_len % 8);
+	hbh_hdr	= realloc(hbh_hdr, hbh_len + byte_rest);
+	if(byte_rest == 1){
+		hbh_hdr[ hbh_len + 1] = 0;
+	}else if(byte_rest > 1){
+		hbh_hdr[ hbh_len + 0] = 1;
+		hbh_hdr[ hbh_len + 1] = byte_rest - 2;
 	}
-	if( hbh_len > 8){
-		memset(hbh_hdr + 1, hbh_len - 8, 1); // set HBH len to byte length
-	}
-	if(hbh_hdr){
-		hexDump( "HBH", hbh_hdr, hbh_len, 16);
+	hbh_len += byte_rest;
+	if(!lenset)
+		hbh_hdr[1] = (hbh_len / 8) - 1;
+	if(hbh_hdr){ // copy to ext header
+		p6_cp_ext(hbh_hdr, hbh_len);
+		p6_ip_add_len( hbh_len);
+		free(hbh_hdr);
 	}
 }
-void p6_ip_hph(char *str){
+void p6_ip_add_len(uint16_t len){
+	ipv6_pl += len;
 }
-void p6_mk_ext(){
-
+void p6_ip_autolen(){
+	p6_ip_pl(ipv6_pl);
 }
-

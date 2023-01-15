@@ -237,7 +237,6 @@ void p6_tcp_flags( char *str ){
 void p6_tcp_timestamp( char *str){
 	unsigned int v1, v2 = 0;
 	int ret = sscanf(str,"%u,%u", &v1, &v2);
-	printf("ret = %d\n", ret);
 	if(ret == 2)
 		p6_tcp_tstmp( v1, v2 );
 	else

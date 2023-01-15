@@ -82,7 +82,7 @@ int p6_dg_send( char *interface){
 		perror ("if_nametoindex() failed to obtain interface index ");
 		exit (EXIT_FAILURE);
 	}
-	printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);
+	/*printf ("Index for interface %s is %i\n", interface, device.sll_ifindex);*/
 	// Fill out sockaddr_ll.
 	device.sll_family = AF_PACKET;
 	memcpy (device.sll_addr, eth_hdr.ether_shost , ETHER_ADDR_LEN);

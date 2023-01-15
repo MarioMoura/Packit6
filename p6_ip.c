@@ -110,7 +110,6 @@ void p6_cp_ext( void *addr, int len){
 	ext_hdr = realloc( ext_hdr, ext_len + len);
 	memcpy(ext_hdr + ext_len, addr, len);
 	ext_len += len;
-	hexDump( "Ext Header", ext_hdr, ext_len, 16);
 }
 int hexstr2intarr(char *str, int len, uint8_t *mem){
 	memset( mem , 0, len );
@@ -157,9 +156,7 @@ void p6_ip_hph_add(char *str){
 
 	token = strtok(NULL,delim);
 	while( token ){
-		printf(" = %d\n",
-		sscanf( token,"%hhd:%hhd:%ms",&t,&l,&v_value) // Scan token values
-		);
+		sscanf( token,"%hhd:%hhd:%ms",&t,&l,&v_value); // Scan token values
 		hbh_hdr = realloc( hbh_hdr, hbh_len + l + 2); // prepare header mem
 		v = malloc( l * sizeof(uint8_t));
 		hexstr2intarr( v_value, l, v);

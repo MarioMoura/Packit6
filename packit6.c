@@ -1,3 +1,23 @@
+/*
+ * packit6 -- ipv6 packet generator/injector
+ * 
+ * Copyright (C) 2022  Mario Moura <mariohenriqueneto@gmail.com>
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ * 
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>           
@@ -138,7 +158,7 @@ char     *ip_dst = NULL;
 char     ip_v    = 6   ;
 uint8_t  ip_tc   = 0   ;
 uint32_t ip_fl   = 0   ;
-uint8_t  ip_pl   = 0   ;
+uint8_t  ip_pl   = 0   ; char fip_pl = 0;
 uint8_t  ip_nh   = 0   ; char fip_nh = 0;
 uint8_t  ip_hl   = 64  ;
 
@@ -225,7 +245,7 @@ int main( int argc, char **argv){
 			case IP_TC      : ip_tc                         = atoi(optarg)             ;                break;
 			case IP_FL      : ip_fl                         = atoi(optarg)             ;                break;
 			case 'n'        : ip_fl                         = atoi(optarg)             ;                break;
-			case IP_PL      : ip_pl                         = atoi(optarg)             ;                break;
+			case IP_PL      : ip_pl                         = atoi(optarg)             ; fip_pl=1;      break;
 			case IP_NH      : ip_nh                         = atoi(optarg)             ; fip_nh=1;      break;
 			case IP_HL      : ip_hl                         = atoi(optarg)             ;                break;
 			case 's'        : ip_src                        = optarg                   ;                break;
@@ -393,7 +413,7 @@ int main( int argc, char **argv){
 	}
 
 	p6_dg_copy_ether();
-	if(ip_pl)
+	if(fip_pl)
 		p6_ip_pl(ip_pl);
 	else
 		p6_ip_autolen();
